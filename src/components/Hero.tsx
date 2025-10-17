@@ -45,9 +45,11 @@ export const Hero = () => {
                 Launch Vault
               </Button>
             </Link>
-            <Button variant="outline" size="lg">
-              View Analytics
-            </Button>
+            <Link to='/user'>
+              <Button variant="outline" size="lg">
+                View Analytics
+              </Button>
+            </Link>  
           </div>
           
           {/* Stats */}

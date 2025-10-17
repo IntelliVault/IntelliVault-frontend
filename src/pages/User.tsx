@@ -1,4 +1,4 @@
-import { ArrowLeft, Wallet, TrendingUp, ShieldCheck, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Wallet, TrendingUp, ShieldCheck, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,16 +17,42 @@ const User = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      {/* <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/vault" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
             <ArrowLeft className="h-5 w-5" />
             <span className="font-semibold">Back to Vault</span>
           </Link>
+          <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+            <span className="font-semibold">Back to Home</span>
+            <ArrowRight className="h-5 w-5" />
+          </Link>
           <Button variant="outline" size="sm">
             <Wallet className="h-4 w-4 mr-2" />
             Disconnect
           </Button>
+        </div>
+      </header>
+       */}
+      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            {/* Left side */}
+          <Link to="/vault" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+            <ArrowLeft className="h-5 w-5" />
+            <span className="font-semibold">Back to Vault</span>
+          </Link>
+
+            {/* Right side */}
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
+              <span className="font-semibold">Back to Home</span>
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Button variant="outline" size="sm">
+              <Wallet className="h-4 w-4 mr-2" />
+              Disconnect
+            </Button>
+          </div>
         </div>
       </header>
 
