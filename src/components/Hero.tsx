@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Shield, TrendingUp, BarChart3 } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 
 export const Hero = () => {
@@ -39,9 +40,11 @@ export const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button variant="hero" size="lg">
-              Launch Vault
-            </Button>
+            <Link to="/vault">
+              <Button variant="hero" size="lg">
+                Launch Vault
+              </Button>
+            </Link>
             <Button variant="outline" size="lg">
               View Analytics
             </Button>
