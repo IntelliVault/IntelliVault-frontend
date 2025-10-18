@@ -2,15 +2,14 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/f9603e77-1f54-45d6-a947-1d4d2d4d95ca
-
+**URL**: https://lovable.dev/projects/68b6bfb4-0838-4d28-b187-2d6654db1e5e
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f9603e77-1f54-45d6-a947-1d4d2d4d95ca) and start prompting.
+Simply visit the [Lovable Project](https://asset-vault-pyusd-72258.lovable.app/) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
