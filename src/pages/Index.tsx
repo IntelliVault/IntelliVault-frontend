@@ -43,10 +43,18 @@ const Index = () => {
       <div className="relative z-10">
         <Header />
         <Hero />
-        <Features />
-        <AssetMarketplace />
-        <AddressIntelligence />
-        <Sponsors />
+        <section >
+          <Features />
+        </section>
+        <section>
+          <AssetMarketplace />
+        </section>
+        <section>
+          <AddressIntelligence />
+        </section>
+        <section id='partners'>
+          <Sponsors />
+        </section>
         <Footer />
       </div>
     </div>
