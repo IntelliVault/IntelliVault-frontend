@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, LayoutDashboard, Users, FileText, Mail } from "lucide-react";
+import { Menu, X, Home, LayoutDashboard, Users, FileText, Mail, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/intellivault-logo.png";
 
 const navLinks = [
-  { name: "Home", href: "#", icon: Home },
-  { name: "Dashboard", href: "#dashboard", icon: LayoutDashboard },
-  { name: "Partners", href: "#partners", icon: Users },
-  { name: "Docs", href: "#docs", icon: FileText },
-  { name: "Contact", href: "#contact", icon: Mail },
+  { name: "Home", href: "/", icon: Home, isRoute: true },
+  { name: "Dashboard", href: "#dashboard", icon: LayoutDashboard, isRoute: false },
+  { name: "Chat", href: "/chat", icon: MessageSquare, isRoute: true }, 
+  { name: "Partners", href: "#partners", icon: Users, isRoute: false },
+  { name: "Docs", href: "#docs", icon: FileText, isRoute: false },
+  { name: "Contact", href: "#contact", icon: Mail, isRoute: false },
 ];
 
 export const Header = () => {
@@ -52,7 +54,7 @@ export const Header = () => {
       <div className="container mx-auto px-6 py-4 relative z-10">
         <div className="flex items-center justify-between">
           {/* Logo with glassmorphic effect */}
-          <div className="flex items-center gap-3 group cursor-pointer">
+          <Link to="/" className="flex items-center gap-3 group cursor-pointer">
             <div className="relative w-12 h-12 rounded-xl overflow-hidden backdrop-blur-sm bg-background/20 border border-primary/20 group-hover:border-primary/40 transition-all duration-500 group-hover:shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
               <img src={logo} alt="IntelliVault" className="w-full h-full object-contain p-1.5 group-hover:scale-110 transition-transform duration-500" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -60,29 +62,43 @@ export const Header = () => {
             <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-[#00BFFF] via-primary to-[#C754FF] bg-clip-text text-transparent" style={{ fontFamily: "Inter, sans-serif" }}>
               IntelliVault
             </span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation with icons */}
           <nav className="hidden md:flex items-center gap-2">
             {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-primary/5 backdrop-blur-sm"
-              >
-                <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
-                <span>{link.name}</span>
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent group-hover:w-full transition-all duration-500" />
-              </a>
+              link.isRoute ? (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-primary/5 backdrop-blur-sm"
+                >
+                  <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                  <span>{link.name}</span>
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent group-hover:w-full transition-all duration-500" />
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:bg-primary/5 backdrop-blur-sm"
+                >
+                  <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                  <span>{link.name}</span>
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent group-hover:w-full transition-all duration-500" />
+                </a>
+              )
             ))}
           </nav>
 
           {/* Launch App Button with glassmorphism */}
           <div className="hidden md:block">
-            <Button className="relative overflow-hidden bg-gradient-to-r from-primary/90 to-[#00BFFF]/90 hover:from-primary hover:to-[#00BFFF] backdrop-blur-sm border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-500 font-semibold group">
-              <span className="relative z-10">Launch App</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            </Button>
+            <Link to="/vault">
+              <Button className="relative overflow-hidden bg-gradient-to-r from-primary/90 to-[#00BFFF]/90 hover:from-primary hover:to-[#00BFFF] backdrop-blur-sm border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-500 font-semibold group">
+                <span className="relative z-10">Launch App</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -99,17 +115,31 @@ export const Header = () => {
           <div className="md:hidden mt-4 pb-4 rounded-xl backdrop-blur-xl bg-background/60 border border-border/40 p-4 animate-fade-in">
             <nav className="flex flex-col gap-2">
               {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-3 px-4 rounded-lg hover:bg-primary/5"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <link.icon className="w-4 h-4" />
-                  {link.name}
-                </a>
+                link.isRoute ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-3 px-4 rounded-lg hover:bg-primary/5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <link.icon className="w-4 h-4" />
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-3 px-4 rounded-lg hover:bg-primary/5"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <link.icon className="w-4 h-4" />
+                    {link.name}
+                  </a>
+                )
               ))}
-              <Button className="bg-gradient-to-r from-primary to-[#00BFFF] mt-2 w-full">Launch App</Button>
+              <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button className="bg-gradient-to-r from-primary to-[#00BFFF] mt-2 w-full">Launch App</Button>
+              </Link>
             </nav>
           </div>
         )}
