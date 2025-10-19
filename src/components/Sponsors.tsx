@@ -8,7 +8,7 @@ const sponsors = [
     name: "Blockscout",
     logo: blockscoutLogo,
     label: "On-chain Analytics Partner",
-    description: "Empowering VaultX with transparent on-chain analytics and network visibility.",
+    description: "Empowering IntelliVault with transparent on-chain analytics and network visibility.",
     glowColor: "#8B5CF6",
   },
   {
