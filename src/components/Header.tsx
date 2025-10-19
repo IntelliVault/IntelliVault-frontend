@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, LayoutDashboard, Users, FileText, Mail, MessageSquare } from "lucide-react";
+import { Menu, X, Home, LayoutDashboard, Users, FileText, Mail, MessageSquare, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAppKit } from "@reown/appkit/react";
+import { useAccount, useDisconnect } from "wagmi";
 import logo from "@/assets/intellivault-logo.png";
 
 const navLinks = [
@@ -16,6 +18,9 @@ const navLinks = [
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { open } = useAppKit();
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +29,18 @@ export const Header = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const formatAddress = (addr: string) => {
+    return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  };
+
+  const handleWalletClick = () => {
+    if (isConnected) {
+      open({ view: 'Account' });
+    } else {
+      open();
+    }
+  };
 
   return (
     <header
@@ -91,8 +108,20 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* Launch App Button with glassmorphism */}
-          <div className="hidden md:block">
+          {/* Wallet Connect & Launch App Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            <Button 
+              onClick={handleWalletClick}
+              variant="outline"
+              className="relative overflow-hidden backdrop-blur-sm border-primary/20 hover:border-primary/40 transition-all duration-500 font-semibold group"
+            >
+              <Wallet className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+              <span className="relative z-10">
+                {isConnected && address ? formatAddress(address) : "Connect Wallet"}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            </Button>
+
             <Link to="/vault">
               <Button className="relative overflow-hidden bg-gradient-to-r from-primary/90 to-[#00BFFF]/90 hover:from-primary hover:to-[#00BFFF] backdrop-blur-sm border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-500 font-semibold group">
                 <span className="relative z-10">Launch App</span>
@@ -137,6 +166,17 @@ export const Header = () => {
                   </a>
                 )
               ))}
+              <Button 
+                onClick={() => {
+                  handleWalletClick();
+                  setIsMobileMenuOpen(false);
+                }}
+                variant="outline"
+                className="w-full mt-2 border-primary/20"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                {isConnected && address ? formatAddress(address) : "Connect Wallet"}
+              </Button>
               <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)}>
                 <Button className="bg-gradient-to-r from-primary to-[#00BFFF] mt-2 w-full">Launch App</Button>
               </Link>
