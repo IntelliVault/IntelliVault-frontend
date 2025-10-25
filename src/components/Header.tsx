@@ -122,12 +122,19 @@ export const Header = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             </Button>
 
-            <Link to="/vault">
-              <Button className="relative overflow-hidden bg-gradient-to-r from-primary/90 to-[#00BFFF]/90 hover:from-primary hover:to-[#00BFFF] backdrop-blur-sm border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-500 font-semibold group">
+              <Button
+                onClick={() => {
+                  if (isConnected) {
+                    window.location.href = "/chat"; // Navigate to chat
+                  } else {
+                    open(); // Trigger wallet connect modal
+                  }
+                }}
+                className="relative overflow-hidden bg-gradient-to-r from-primary/90 to-[#00BFFF]/90 hover:from-primary hover:to-[#00BFFF] backdrop-blur-sm border border-primary/20 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-500 font-semibold group">
                 <span className="relative z-10">Launch App</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
-            </Link>
+
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -177,9 +184,18 @@ export const Header = () => {
                 <Wallet className="w-4 h-4 mr-2" />
                 {isConnected && address ? formatAddress(address) : "Connect Wallet"}
               </Button>
-              <Link to="/vault" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button className="bg-gradient-to-r from-primary to-[#00BFFF] mt-2 w-full">Launch App</Button>
-              </Link>
+              <Button
+                onClick={() => {
+                  if (isConnected) {
+                    window.location.href = "/chat";
+                  } else {
+                    open();
+                  }
+                  setIsMobileMenuOpen(false);
+                }}
+                className="bg-gradient-to-r from-primary to-[#00BFFF] mt-2 w-full"> Launch App
+              </Button>
+
             </nav>
           </div>
         )}

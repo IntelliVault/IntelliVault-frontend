@@ -41,12 +41,24 @@ const Index = () => {
 
       {/* Main content */}
       <div className="relative z-10">
-        <Header />
-        <Hero />
-        <Sponsors />
-        <AssetMarketplace />
-        <Features />
-        <AddressIntelligence />
+        <section>
+          <Header />
+        </section>
+        <section id="/">
+         <Hero />
+        </section>
+        <section id="partners">
+         <Sponsors />
+        </section>
+        <section>
+         <AssetMarketplace />
+        </section>
+        <section>
+         <Features />
+        </section>
+        <section id="dashboard">
+         <AddressIntelligence />
+        </section>
         <Footer />
       </div>
     </div>
