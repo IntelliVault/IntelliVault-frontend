@@ -2,12 +2,12 @@
 
 > ETHOnline 2025 Hackathon Project - Tokenized Real-World Assets Platform
 
-[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-5.4.2-purple.svg)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-cyan.svg)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-19.0.0-blue.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.0.3-purple.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0.0-cyan.svg)](https://tailwindcss.com/)
 
-Built with **Blockscout MCP** and **Hardhat** for ETHOnline 2025
+Built with **Blockscout MCP**, **Hardhat**, and **PayPal USD (PYUSD)** for ETHOnline 2025
 
 ---
 
@@ -32,7 +32,7 @@ Built with **Blockscout MCP** and **Hardhat** for ETHOnline 2025
 IntelliVault is a modern Web3 platform that tokenizes real-world assets (RWAs) using smart contracts deployed on Sepolia testnet. The frontend provides an intuitive interface for users to interact with tokenized assets, AI-powered blockchain analytics, and seamless wallet integration.
 
 **Built For:** ETHOnline 2025 Hackathon  
-**Main Sponsors:** Blockscout & Hardhat
+**Main Sponsors:** Blockscout, Hardhat & PayPal USD (PYUSD)
 
 ---
 
@@ -55,25 +55,25 @@ IntelliVault is a modern Web3 platform that tokenizes real-world assets (RWAs) u
 
 ### Core Technologies
 
-- **React 18.3** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool & dev server
-- **Tailwind CSS** - Styling
+- **React 19.0** - UI framework
+- **TypeScript 5.7** - Type safety
+- **Vite 6.0** - Build tool & dev server
+- **Tailwind CSS 4.0** - Styling
 - **shadcn/ui** - Component library
 
 ### Blockchain Integration
 
-- **Ethers.js v6** - Blockchain interactions
-- **Wagmi** - React hooks for Ethereum
-- **Reown AppKit** - Multi-wallet connection
-- **Hardhat** - Smart contract development
+- **Ethers.js v6.13** - Blockchain interactions
+- **Wagmi 2.15** - React hooks for Ethereum
+- **Reown AppKit 1.6** - Multi-wallet connection
+- **Hardhat 2.22** - Smart contract development
 
 ### AI & Analytics
 
 - **Blockscout MCP Server** - Multi-chain blockchain analytics (Query Mode)
-- **LangChain** - AI agent orchestration (Agent Mode)
+- **LangChain 0.3** - AI agent orchestration (Agent Mode)
 - **Gemini 2.0 Flash** - LLM provider
-- **Socket.IO** - Real-time WebSocket communication
+- **Socket.IO 4.8** - Real-time WebSocket communication
 
 ---
 
@@ -100,6 +100,21 @@ Used for smart contract development and deployment:
 - Contract verification
 
 **Deployment Network:** Sepolia Testnet (Chain ID: 11155111)
+
+### PayPal USD (PYUSD)
+
+Used as the settlement and stablecoin currency:
+
+- **Token:** PYUSD on Sepolia Testnet
+- **Purpose:** Settlement currency for buying/selling tokenized RWAs
+- **Contract:** `0xCaC524BcA292aaade2DF8A05cC58F0a65B1B3bB9`
+- **Integration:** All vault transactions use PYUSD as the payment token
+
+**Features:**
+- Buy RWA tokens with PYUSD
+- Sell RWA tokens for PYUSD
+- Portfolio value calculated in PYUSD
+- Stablecoin-backed vault liquidity
 
 ---
 
@@ -319,78 +334,6 @@ console.log(data.toolCalls); // MCP tool executions
 
 ---
 
-## 🛠️ Development
-
-### Available Scripts
-
-```bash
-npm run dev        # Start development server (port 5173)
-npm run build      # Build for production
-npm run preview    # Preview production build
-npm run lint       # Lint code
-```
-
-### Development Workflow
-
-1. Make changes in `src/` directory
-2. Hot Module Replacement (HMR) updates automatically
-3. Test in browser at `http://localhost:5173`
-4. Check browser console for errors
-
-### Key Development Files
-
-**WebSocket Client** - `src/services/aiAgentService.ts`
-- Manages connection to Agent Mode (port 3002)
-- Handles real-time communication
-- Auto-reconnection logic
-
-**Blockchain Readers** - `src/lib/readers.ts`
-- `fetchUserPortfolio(address)` - Get user holdings
-- `fetchVaultAnalytics()` - Get vault metrics
-- Uses Ethers.js for contract interactions
-
-**Configuration** - `src/config/constants.ts`
-- Contract addresses
-- Network settings
-- RPC URLs
-
----
-
-## 🚀 Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-Output: `dist/` directory
-
-### Deployment Platforms
-
-**Vercel (Recommended)**
-```bash
-npm i -g vercel
-vercel --prod
-```
-
-**Netlify**
-```bash
-npm i -g netlify-cli
-netlify deploy --prod
-```
-
-### Environment Variables for Production
-
-Set these in your deployment platform:
-- `VITE_VAULT_ADDRESS`
-- `VITE_PYUSD_ADDRESS`
-- `VITE_RPC_URL`
-- `VITE_STOCK_TOKENS`
-- `VITE_WALLET_CONNECT_PROJECT_ID`
-
----
-
 ## 🧪 Testing
 
 ### Manual Testing Checklist
@@ -481,6 +424,11 @@ Set these in your deployment platform:
 - RWA token contracts
 - Testing infrastructure
 
+**PayPal USD (PYUSD)** - Stablecoin settlement
+- PYUSD as settlement currency
+- Buy/sell RWA tokens with PYUSD
+- Stablecoin-backed vault liquidity
+
 ### Project Links
 - **Demo:** [Coming Soon]
 - **Video:** [Coming Soon]
@@ -498,6 +446,7 @@ MIT License
 
 - **Blockscout** - For the amazing MCP server and multi-chain analytics
 - **Hardhat** - For the best-in-class smart contract development tools
+- **PayPal USD** - For providing PYUSD as a stablecoin settlement layer
 - **ETHOnline 2025** - For the opportunity to build and innovate
 - **Google Gemini** - For the powerful LLM capabilities
 - **Reown/WalletConnect** - For seamless wallet integration
