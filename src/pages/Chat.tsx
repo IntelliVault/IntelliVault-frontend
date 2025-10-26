@@ -1,6 +1,7 @@
 // src/pages/Chat.tsx
 
 import { useState, useRef, useEffect } from "react";
+import logo from "@/assets/intellivault-logo.png";
 import {
   ArrowLeft,
   Send,
@@ -48,8 +49,6 @@ const ERC20_ABI = [
   "function allowance(address owner, address spender) public view returns (uint256)"
 ];
 
-
-
 const Chat = () => {
   const { address, isConnected } = useAccount();
   const [currentMode, setCurrentMode] = useState<'agent' | 'query'>('agent');
@@ -73,6 +72,7 @@ const Chat = () => {
       document.head.removeChild(styleElement);
     };
   }, []);
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -89,6 +89,7 @@ const Chat = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExecutingTx, setIsExecutingTx] = useState(false);
   const [executedTxIds, setExecutedTxIds] = useState<Set<string>>(new Set());
+  const isExecutingTxRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when messages change
@@ -107,7 +108,6 @@ const Chat = () => {
       setError(null);
     } else {
       console.log('AI agent not connected, attempting connection...');
-      // Ensure connection is attempted
       aiAgentService.connect();
     }
 
@@ -148,59 +148,67 @@ const Chat = () => {
             timestamp: response.timestamp ? new Date(response.timestamp) : new Date(),
             toolCalls: response.data.toolCalls,
           };
-          setMessages((prev) => [...prev, agentMessage]);
 
-        // Process tool calls for better user experience
-        if (response.data.toolCalls) {
-          // Enhance the response message with tool call results
-          let enhancedMessage = response.data.response;
-          
-          response.data.toolCalls.forEach(call => {
-            // Extract meaningful information from tool calls
-            if (call.tool === 'get_token_price' && call.result && call.result.success) {
-              // Debug the actual structure of tool calls
-              console.log('🔍 Tool call structure:', JSON.stringify(call, null, 2));
-              // Temporarily use fixed name to test if this fixes the server error
-              enhancedMessage = `The current Tesla token price is **$${call.result.price} ${call.result.currency}**.`;
-            } else if (call.tool === 'calculate_buy_cost' && call.result && call.result.success) {
-              enhancedMessage = `To buy ${call.args.amount || 'the requested'} tokens, it will cost **${call.result.totalCost} ${call.result.currency}**.`;
-            } else if (call.tool === 'calculate_sell_value' && call.result && call.result.success) {
-              enhancedMessage = `Selling ${call.args.amount || 'the requested'} tokens will give you **${call.result.totalValue} ${call.result.currency}**.`;
-            }
+          // Process tool calls for better user experience
+          if (response.data.toolCalls) {
+            let enhancedMessage = response.data.response;
+            let hasPendingTx = false;
+            let pendingTxData = null;
             
-            // Check for MetaMask transactions
-            if (call.result && call.result.requiresMetaMask) {
-              // Create a unique ID for this transaction to prevent duplicates
-              const txId = `${call.tool}-${JSON.stringify(call.args)}-${response.timestamp}`;
-              
-              if (!executedTxIds.has(txId)) {
-                // Mark this transaction as executed
-                setExecutedTxIds(prev => new Set([...prev, txId]));
-                
-                // Automatically trigger MetaMask transaction
-                console.log('🚀 Auto-executing MetaMask transaction...');
-                setTimeout(() => {
-                  executeMetaMaskTransaction(call.result);
-                }, 1000); // Small delay to let the user see the preparation message
-              } else {
-                console.log('🔄 Transaction already executed, skipping...');
+            response.data.toolCalls.forEach(call => {
+              // Extract meaningful information from tool calls
+              if (call.tool === 'get_token_price' && call.result && call.result.success) {
+                console.log('🔍 Tool call structure:', JSON.stringify(call, null, 2));
+                enhancedMessage = `The current price is **$${call.result.price} ${call.result.currency}**.`;
+              } else if (call.tool === 'calculate_buy_cost' && call.result && call.result.success) {
+                enhancedMessage = `To buy ${call.args.amount || 'the requested'} tokens, it will cost **${call.result.totalCost} ${call.result.currency}**.`;
+              } else if (call.tool === 'calculate_sell_value' && call.result && call.result.success) {
+                enhancedMessage = `Selling ${call.args.amount || 'the requested'} tokens will give you **${call.result.totalValue} ${call.result.currency}**.`;
               }
+              
+              // Check for MetaMask transactions - but don't execute yet
+              if (call.result && call.result.requiresMetaMask && !hasPendingTx) {
+                const txId = `${call.tool}-${JSON.stringify(call.args)}-${response.timestamp}`;
+                
+                if (!executedTxIds.has(txId)) {
+                  hasPendingTx = true;
+                  pendingTxData = { txId, result: call.result };
+                  console.log('📋 Pending transaction detected:', txId);
+                } else {
+                  console.log('🔄 Transaction already executed, skipping...');
+                }
+              }
+            });
+            
+            // Update the agent message with enhanced content
+            agentMessage.text = enhancedMessage;
+            
+            // Add message first
+            setMessages((prev) => [...prev, agentMessage]);
+            
+            // Execute transaction AFTER message is added and state is updated
+            if (hasPendingTx && pendingTxData) {
+              setExecutedTxIds(prev => new Set([...prev, pendingTxData.txId]));
+              
+              setTimeout(() => {
+                console.log('🚀 Auto-executing MetaMask transaction...');
+                executeMetaMaskTransaction(pendingTxData.result);
+              }, 1500);
             }
-          });
-          
-          // Update the agent message with enhanced content
-          agentMessage.text = enhancedMessage;
+          } else {
+            // No tool calls, just add the message
+            setMessages((prev) => [...prev, agentMessage]);
+          }
+        } else {
+          const errorMessage: ChatMessage = {
+            id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            text: `❌ Error: ${response.error || "Unknown error occurred"}`,
+            sender: "agent",
+            timestamp: new Date(response.timestamp),
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+          setError(response.error || "Unknown error occurred");
         }
-      } else {
-        const errorMessage: ChatMessage = {
-          id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          text: `❌ Error: ${response.error || "Unknown error occurred"}`,
-          sender: "agent",
-          timestamp: new Date(response.timestamp),
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-        setError(response.error || "Unknown error occurred");
-      }
       } catch (error) {
         console.error('❌ Error processing chat response:', error);
         const fallbackMessage: ChatMessage = {
@@ -215,10 +223,8 @@ const Chat = () => {
 
     // Fallback health check (non-blocking)
     const checkHealthAfterDelay = async () => {
-      // Wait a bit for WebSocket to connect first
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Only check health if still connecting or if connection failed
       if (!aiAgentService.isConnected()) {
         try {
           const healthy = await aiAgentService.checkHealth();
@@ -242,17 +248,15 @@ const Chat = () => {
 
     checkHealthAfterDelay();
 
-    // Cleanup on unmount
     return () => {
       // Don't disconnect as the service is a singleton
     };
-  }, []);
+  }, [executedTxIds]);
 
   // Notify agent when wallet connects
   useEffect(() => {
     if (isConnected && address && aiAgentService.isConnected()) {
       console.log("Wallet connected:", address);
-      // Send wallet connection event to agent like HTML version
       aiAgentService.notifyWalletConnection(address);
     }
   }, [isConnected, address]);
@@ -288,7 +292,7 @@ const Chat = () => {
 
     try {
       if (currentMode === 'query') {
-        // Query Mode: Direct call to MCP server (like HTML version)
+        // Query Mode: Direct call to MCP server
         try {
           const response = await fetch('http://localhost:3001/chat', {
             method: 'POST',
@@ -326,11 +330,7 @@ const Chat = () => {
       } else {
         // Agent Mode: Use WebSocket to AI agent
         if (aiAgentService.isConnected()) {
-          // Use WebSocket like the HTML version
           console.log('📤 Sending message via WebSocket:', messageText);
-          console.log('🔍 Testing with simple message first...');
-          
-          // For debugging: try exact same message as HTML version
           await aiAgentService.sendMessage(messageText);
         } else {
           // Fallback to HTTP
@@ -345,48 +345,54 @@ const Chat = () => {
               timestamp: new Date(response.timestamp),
               toolCalls: response.data.toolCalls,
             };
-            setMessages((prev) => [...prev, agentMessage]);
 
-          // Process tool calls for better user experience (HTTP mode)
-          if (response.data.toolCalls) {
-            // Enhance the response message with tool call results
-            let enhancedMessage = response.data.response;
-            
-            response.data.toolCalls.forEach(call => {
-              // Extract meaningful information from tool calls
-              if (call.tool === 'get_token_price' && call.result && call.result.success) {
-                // Debug the actual structure of tool calls (HTTP mode)
-                console.log('🔍 HTTP Tool call structure:', JSON.stringify(call, null, 2));
-                // Temporarily use fixed name to test if this fixes the server error
-                enhancedMessage = `The current Tesla token price is **$${call.result.price} ${call.result.currency}**.`;
-              } else if (call.tool === 'calculate_buy_cost' && call.result && call.result.success) {
-                enhancedMessage = `To buy ${call.args.amount || 'the requested'} tokens, it will cost **${call.result.totalCost} ${call.result.currency}**.`;
-              } else if (call.tool === 'calculate_sell_value' && call.result && call.result.success) {
-                enhancedMessage = `Selling ${call.args.amount || 'the requested'} tokens will give you **${call.result.totalValue} ${call.result.currency}**.`;
-              }
+            // Process tool calls for HTTP mode
+            if (response.data.toolCalls) {
+              let enhancedMessage = response.data.response;
+              let hasPendingTx = false;
+              let pendingTxData = null;
               
-              // Check for MetaMask transactions
-              if (call.result && call.result.requiresMetaMask) {
-                // Create a unique ID for this transaction to prevent duplicates
-                const txId = `${call.tool}-${JSON.stringify(call.args)}-${response.timestamp}`;
-                
-                if (!executedTxIds.has(txId)) {
-                  // Mark this transaction as executed
-                  setExecutedTxIds(prev => new Set([...prev, txId]));
-                  
-                  console.log('🚀 Auto-executing MetaMask transaction (HTTP mode)...');
-                  setTimeout(() => {
-                    executeMetaMaskTransaction(call.result);
-                  }, 1000);
-                } else {
-                  console.log('🔄 Transaction already executed (HTTP mode), skipping...');
+              response.data.toolCalls.forEach(call => {
+                if (call.tool === 'get_token_price' && call.result && call.result.success) {
+                  console.log('🔍 HTTP Tool call structure:', JSON.stringify(call, null, 2));
+                  enhancedMessage = `The current price is **$${call.result.price} ${call.result.currency}**.`;
+                } else if (call.tool === 'calculate_buy_cost' && call.result && call.result.success) {
+                  enhancedMessage = `To buy ${call.args.amount || 'the requested'} tokens, it will cost **${call.result.totalCost} ${call.result.currency}**.`;
+                } else if (call.tool === 'calculate_sell_value' && call.result && call.result.success) {
+                  enhancedMessage = `Selling ${call.args.amount || 'the requested'} tokens will give you **${call.result.totalValue} ${call.result.currency}**.`;
                 }
+                
+                // Check for MetaMask transactions
+                if (call.result && call.result.requiresMetaMask && !hasPendingTx) {
+                  const txId = `${call.tool}-${JSON.stringify(call.args)}-${response.timestamp}`;
+                  
+                  if (!executedTxIds.has(txId)) {
+                    hasPendingTx = true;
+                    pendingTxData = { txId, result: call.result };
+                    console.log('📋 Pending HTTP transaction detected:', txId);
+                  } else {
+                    console.log('🔄 HTTP Transaction already executed, skipping...');
+                  }
+                }
+              });
+              
+              agentMessage.text = enhancedMessage;
+              
+              // Add message first
+              setMessages((prev) => [...prev, agentMessage]);
+              
+              // Execute transaction AFTER message is added
+              if (hasPendingTx && pendingTxData) {
+                setExecutedTxIds(prev => new Set([...prev, pendingTxData.txId]));
+                
+                setTimeout(() => {
+                  console.log('🚀 Auto-executing MetaMask transaction (HTTP mode)...');
+                  executeMetaMaskTransaction(pendingTxData.result);
+                }, 1500);
               }
-            });
-            
-            // Update the agent message with enhanced content
-            agentMessage.text = enhancedMessage;
-          }
+            } else {
+              setMessages((prev) => [...prev, agentMessage]);
+            }
           } else {
             throw new Error(response.error || "Request failed");
           }
@@ -527,26 +533,30 @@ const Chat = () => {
 
   // Execute MetaMask transaction automatically
   const executeMetaMaskTransaction = async (txData: any) => {
-    if (isExecutingTx) {
-      console.log('🔄 Transaction already in progress, skipping...');
+    // Double-check with ref to prevent race conditions
+    if (isExecutingTx || isExecutingTxRef.current) {
+      console.log('🔄 Transaction already in progress (ref check), skipping...');
       return;
     }
     
     setIsExecutingTx(true);
+    isExecutingTxRef.current = true;
+    console.log('🚀 Starting MetaMask transaction execution');
+    
     try {
       if (!window.ethereum) {
         addErrorMessage('MetaMask not detected. Please install MetaMask first: https://metamask.io/download/');
         setIsExecutingTx(false);
+        isExecutingTxRef.current = false;
         return;
       }
 
-      // Add simple status message
-      addAgentMessage('� Executing transaction with MetaMask...');
+      addAgentMessage('💎 Executing transaction with MetaMask...');
       
       const provider = new ethers.BrowserProvider(window.ethereum as any);
       await provider.send("eth_requestAccounts", []);
       
-      // Check and switch to Sepolia network if needed (silently)
+      // Check and switch to Sepolia network if needed
       const network = await provider.getNetwork();
       const expectedChainId = 11155111; // Sepolia testnet
       
@@ -557,7 +567,6 @@ const Chat = () => {
           ]);
         } catch (switchError: any) {
           if (switchError.code === 4902) {
-            // Chain not added to MetaMask, add it
             await provider.send("wallet_addEthereumChain", [{
               chainId: `0x${expectedChainId.toString(16)}`,
               chainName: 'Sepolia Testnet',
@@ -580,19 +589,15 @@ const Chat = () => {
 
       // Execute each step automatically
       for (const step of txData.steps) {
-        
         if (step.action === 'approve_pyusd' || step.action === 'approve_token') {
-          // Approve token
           const tokenContract = new ethers.Contract(step.contract, ERC20_ABI, signer);
           
           try {
-            // Verify contract exists by checking if it has code
             const code = await provider.getCode(step.contract);
             if (code === '0x') {
               throw new Error(`No contract found at address ${step.contract}. Please verify the contract address and network.`);
             }
             
-            // Check current allowance
             const currentAllowance = await tokenContract.allowance(userAddress, step.spender);
             const requiredAmount = BigInt(step.amount);
             
@@ -604,10 +609,8 @@ const Chat = () => {
             throw new Error(`Contract interaction failed: ${contractError.message}. Please verify you're on the correct network (Sepolia testnet).`);
           }
         } else if (step.action === 'buy_stock') {
-          // Execute buy
           const vaultContract = new ethers.Contract(step.contract, VAULT_ABI, signer);
           
-          // Verify vault contract exists
           const vaultCode = await provider.getCode(step.contract);
           if (vaultCode === '0x') {
             throw new Error(`No vault contract found at address ${step.contract}. Please verify the contract address and network.`);
@@ -620,10 +623,8 @@ const Chat = () => {
           const receipt = await buyTx.wait();
           addAgentMessage(`✅ Buy transaction successful! Hash: ${receipt?.hash || buyTx.hash}`);
         } else if (step.action === 'sell_stock') {
-          // Execute sell
           const vaultContract = new ethers.Contract(step.contract, VAULT_ABI, signer);
           
-          // Verify vault contract exists
           const vaultCode = await provider.getCode(step.contract);
           if (vaultCode === '0x') {
             throw new Error(`No vault contract found at address ${step.contract}. Please verify the contract address and network.`);
@@ -643,7 +644,6 @@ const Chat = () => {
     } catch (error: any) {
       console.error('Transaction error:', error);
       
-      // Handle specific MetaMask errors
       if (error.code === 4001) {
         addErrorMessage('Transaction rejected by user in MetaMask');
       } else if (error.code === -32603) {
@@ -655,6 +655,8 @@ const Chat = () => {
       }
     } finally {
       setIsExecutingTx(false);
+      isExecutingTxRef.current = false;
+      console.log('✅ Transaction execution completed');
     }
   };
 
@@ -711,8 +713,6 @@ const Chat = () => {
         );
     }
   };
-
-
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -776,7 +776,7 @@ const Chat = () => {
                 </Badge>
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-card border border-border/50">
-                <Bot className="h-5 w-5 text-primary animate-pulse" />
+                <img src={logo} alt="IntelliVault" width={20} height={20} />
                 <span className="font-semibold bg-gradient-to-r from-primary to-[#00BFFF] bg-clip-text text-transparent">
                   IntelliVault AI
                 </span>
@@ -833,7 +833,7 @@ const Chat = () => {
                       {message.sender === "user" ? (
                         <User className="h-5 w-5 text-white" />
                       ) : (
-                        <Bot className="h-5 w-5 text-white" />
+                        <img src={logo} alt="IntelliVault" width={70} height={70} />
                       )}
                     </AvatarFallback>
                   </Avatar>
@@ -847,14 +847,12 @@ const Chat = () => {
                     <div className="text-sm leading-relaxed">
                       {message?.text ? message.text.split('\n').map((line, index) => {
                         if (line.includes('**') && line.includes('**')) {
-                          // Bold headers
                           return (
                             <div key={index} className="font-semibold text-primary mb-2 mt-3 first:mt-0">
                               {line.replace(/\*\*/g, '')}
                             </div>
                           );
                         } else if (line.startsWith('•') || line.startsWith('-')) {
-                          // Bullet points
                           return (
                             <div key={index} className="flex items-start gap-2 ml-2 mb-1">
                               <span className="text-primary mt-1">•</span>
@@ -862,7 +860,6 @@ const Chat = () => {
                             </div>
                           );
                         } else if (line.match(/^\d+\./)) {
-                          // Numbered lists
                           return (
                             <div key={index} className="ml-2 mb-1">
                               <span className="text-primary font-semibold mr-2">{line.match(/^\d+\./)?.[0]}</span>
@@ -904,7 +901,7 @@ const Chat = () => {
                 <div className="flex gap-4 animate-slide-up">
                   <Avatar className="h-10 w-10 bg-gradient-to-br from-accent to-primary shadow-lg shadow-accent/30 border-2 border-background">
                     <AvatarFallback className="bg-transparent">
-                      <Bot className="h-5 w-5 text-white" />
+                      <img src={logo} alt="IntelliVault" width={20} height={20} />
                     </AvatarFallback>
                   </Avatar>
                   <div className="bg-gradient-to-br from-muted/80 to-muted backdrop-blur-sm rounded-2xl p-4 border border-border/50 shadow-lg">
@@ -956,24 +953,6 @@ const Chat = () => {
                     >
                       Clear History
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        console.log('Manual connection status check:', aiAgentService.getConnectionStatus());
-                        const connectivity = await aiAgentService.testConnectivity();
-                        console.log('Connectivity test:', connectivity);
-                        
-                        // Try a simple ping first
-                        if (aiAgentService.isConnected()) {
-                          console.log('🏓 Sending test ping...');
-                          aiAgentService.sendTestPing();
-                        }
-                      }}
-                      className="bg-gradient-card hover:bg-primary/10 border-border/50 transition-all duration-300 hover:scale-105 hover:border-primary/50"
-                    >
-                      Test Connection
-                    </Button>
                   </div>
                 </div>
               )}
@@ -1012,7 +991,7 @@ const Chat = () => {
                           : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
                       }`}
                     >
-                      <Bot className="h-3 w-3" />
+                      <img src={logo} alt="IntelliVault" width={20} height={20} />
                       Agent
                     </button>
                     <button
@@ -1055,7 +1034,7 @@ const Chat = () => {
                   >
                     {currentMode === 'agent' ? (
                       <>
-                        <Bot className="h-2.5 w-2.5 mr-1" />
+                        <img src={logo} alt="IntelliVault" width={20} height={20} />
                         Agent Mode • {agentStatus === "connected" ? "Connected" : "Disconnected"}
                       </>
                     ) : (
