@@ -7,12 +7,11 @@ import { useAccount, useDisconnect } from "wagmi";
 import logo from "@/assets/intellivault-logo.png";
 
 const navLinks = [
-  { name: "Home", href: "/", icon: Home, isRoute: true },
-  { name: "Dashboard", href: "#dashboard", icon: LayoutDashboard, isRoute: false },
-  { name: "Chat", href: "/chat", icon: MessageSquare, isRoute: true }, 
+  
+  { name: "Dashboard", href: "#dashboard", icon: LayoutDashboard, isRoute: false }, 
   { name: "Partners", href: "#partners", icon: Users, isRoute: false },
   { name: "Docs", href: "#docs", icon: FileText, isRoute: false },
-  { name: "Contact", href: "#contact", icon: Mail, isRoute: false },
+  
 ];
 
 export const Header = () => {
